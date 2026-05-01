@@ -1,0 +1,91 @@
+
+
+networks:
+  roboshop:
+
+services:
+  mongodb:
+    image: s2pavan1999/mongodb:v1
+    container_name: mongodb
+    networks:
+      - roboshop
+
+  catalogue:
+    image: s2pavan1999/catalogue:v1
+    container_name: catalogue
+    depends_on:
+      - mongodb
+    networks:
+      - roboshop
+
+  redis:
+    image: redis:7.0
+    container_name: redis
+    networks:
+      - roboshop
+
+  user:
+    image: s2pavan1999/user:v1
+    container_name: user
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - roboshop
+
+  cart:
+    image: s2pavan1999/cart:v1
+    container_name: cart
+    depends_on:
+      - redis
+      - catalogue
+    networks:
+      - roboshop
+
+  mysql:
+    image: s2pavan1999/mysql:v1
+    container_name: mysql
+    networks:
+      - roboshop
+
+  shipping:
+    image: s2pavan1999/shipping:v1
+    container_name: shipping
+    depends_on:
+      - mysql
+      - cart
+    networks:
+      - roboshop
+
+  rabbitmq:
+    image: rabbitmq:3
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: roboshop
+      RABBITMQ_DEFAULT_PASS: roboshop123
+    networks:
+      - roboshop
+
+  payment:
+    image: s2pavan1999/payment:v1
+    container_name: payment
+    depends_on:
+      - rabbitmq
+      - cart
+      - user
+    networks:
+      - roboshop
+
+  frontend:
+    image: s2pavan1999/frontend:v1
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - catalogue
+      - user
+      - cart
+      - shipping
+      - payment
+    networks:
+      - roboshop
